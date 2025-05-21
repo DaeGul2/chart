@@ -107,11 +107,11 @@ const ChartPreviewPanel = ({ sharedState, setSharedState }) => {
         const { labels, scoreCol, avgCol, actualColor, avgColor } = chartObj.config;
         const data = labels.map((label, i) => ({
             항목: label,
-            실제: Number(firstRow[sharedState.columns.indexOf(scoreCol[i])]) || 0,
+            지원자: Number(firstRow[sharedState.columns.indexOf(scoreCol[i])]) || 0,
             평균: Number(firstRow[sharedState.columns.indexOf(avgCol[i])]) || 0,
         }));
 
-        const maxScore = Math.max(...data.map(d => Math.max(d.실제, d.평균)));
+        const maxScore = Math.max(...data.map(d => Math.max(d.지원자, d.평균)));
         const yDomainMax = Math.ceil(maxScore * 1.2 / 2) * 2; // 여유 있게 20% 증가, 짝수로 반올림
 
         if (chartObj.chartType === 'bar') {
@@ -130,8 +130,8 @@ const ChartPreviewPanel = ({ sharedState, setSharedState }) => {
                         <YAxis domain={[0, yDomainMax]} />
                         <Tooltip />
                         <Legend layout="vertical" verticalAlign="top" align="left" />
-                        <Bar dataKey="실제" fill={actualColor}>
-                            <LabelList dataKey="실제" position="top" />
+                        <Bar dataKey="지원자" fill={actualColor}>
+                            <LabelList dataKey="지원자" position="top" />
                         </Bar>
                         <Bar dataKey="평균" fill={avgColor}>
                             <LabelList dataKey="평균" position="top" />
@@ -142,7 +142,10 @@ const ChartPreviewPanel = ({ sharedState, setSharedState }) => {
         }
 
         if (chartObj.chartType === 'radar') {
-            const tickValues = Array.from({ length: yDomainMax / 2 + 1 }, (_, i) => i * 2); // 0, 2, 4, ...
+            const tickValues = Array.from({ length: yDomainMax / 2 + 1 }, (_, i) => i * 2); // 0, 2, ..., yDomainMax
+
+            const displayTicks = tickValues.slice(0, -1); // ✅ 마지막 하나 제거 (최대값 제외)
+
             return (
                 <ResponsiveContainer width="100%" height="100%">
                     <RadarChart
@@ -152,18 +155,22 @@ const ChartPreviewPanel = ({ sharedState, setSharedState }) => {
                         <PolarGrid />
                         <PolarAngleAxis
                             dataKey="항목"
-                            tick={{ fontSize: 12 }}
+                            tick={{
+                                fontSize: 14,
+                                dx: 6, // 👉 x축 기준 살짝 오른쪽
+                                dy: 6, // 👉 y축 기준 살짝 아래
+                            }}
                         />
                         <PolarRadiusAxis
                             angle={90}
-                            domain={[0, yDomainMax]}
-                            tickCount={tickValues.length}
-                            ticks={tickValues}
-                            tick={{ fontSize: 12 }}
+                            domain={[0, yDomainMax]}        // ✅ 전체 범위 유지
+                            tickCount={displayTicks.length}
+                            ticks={displayTicks}            // ✅ 최대값 미포함
+                            tick={{ fontSize: 12, fill: '#444' }}
                             axisLine={{ stroke: '#888' }}
-                            tickLine={{ stroke: '#888' }}
+                            tickLine={{ stroke: '#aaa' }}
                         />
-                        <Radar name="실제" dataKey="실제" stroke={actualColor} fill={actualColor} fillOpacity={0.6} />
+                        <Radar name="지원자" dataKey="지원자" stroke={actualColor} fill={actualColor} fillOpacity={0.6} />
                         <Radar name="평균" dataKey="평균" stroke={avgColor} fill={avgColor} fillOpacity={0.3} />
                         <Legend layout="vertical" verticalAlign="top" align="left" />
                     </RadarChart>
