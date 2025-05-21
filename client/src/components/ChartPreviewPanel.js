@@ -198,14 +198,50 @@ const ChartPreviewPanel = ({ sharedState, setSharedState }) => {
             cursor: 'pointer',
             zIndex: 3,
         };
+        if (obj.type === 'text') {
+            return (
+                <Box
+                    key={obj.id}
+                    position="absolute"
+                    top={obj.y}
+                    left={obj.x}
+                    onMouseDown={e => handleMouseDown(e, obj.id)}
+                    onClick={e => { e.stopPropagation(); setSelectedId(obj.id); }}
+                    sx={{
+                        cursor: 'move',
+                        fontSize: obj.fontSize,
+                        fontWeight: obj.bold ? 'bold' : 'normal',
+                        border: obj.id === selectedId ? '1px dashed #333' : 'none',
+                        p: 0.5,
+                        userSelect: 'none',
+                        maxWidth: 300,
+                        whiteSpace: 'nowrap',
+                    }}
+                >
+                    <Box sx={{
+                        position: 'absolute',
+                        top: -10,
+                        right: -10,
+                        width: 20,
+                        height: 20,
+                        borderRadius: '50%',
+                        background: '#fff',
+                        border: '1px solid #ccc',
+                        textAlign: 'center',
+                        lineHeight: '20px',
+                        cursor: 'pointer',
+                        zIndex: 3,
+                    }} onClick={() => handleDeleteObject(obj.id)}>×</Box>
+                    {obj.text}
+                </Box>
+            );
+        }
 
-        if (obj.type === 'text' || obj.type === 'mappedText') {
-            const firstRow = rows[0];
-            const content = obj.type === 'text'
-                ? obj.text
-                : firstRow
-                    ? firstRow[sharedState.columns.indexOf(obj.column)] || `[${obj.column}]`
-                    : `[${obj.column}]`;
+        if (obj.type === 'mappedText') {
+            const currentRow = rows[currentRowIndex];  // ✅ 현재 선택된 행 사용
+            const content = currentRow
+                ? currentRow[sharedState.columns.indexOf(obj.column)] || `[${obj.column}]`
+                : `[${obj.column}]`;
 
             return (
                 <Box
@@ -358,7 +394,8 @@ const ChartPreviewPanel = ({ sharedState, setSharedState }) => {
                             }}
                             onClick={() => setSelectedId(null)}
                         >
-                            {canvasObjects.map(obj => renderCanvasObject(obj))}
+                            {canvasObjects.map(obj => renderCanvasObject(obj, currentRowIndex))}
+
                         </Box>
                     </Paper>
                     <Box textAlign="center" mt={2}>
